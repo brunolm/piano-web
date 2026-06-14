@@ -2,7 +2,7 @@
 
 A single-page, responsive, touch-friendly piano you can play in any modern browser — desktop or mobile. No build step, no dependencies, works offline. Sound is synthesized live with the Web Audio API.
 
-**▶ Play it: https://brunolm.github.io/piano-web/**
+**▶ Play it: https://brunolm.com/piano-web/** (also at https://brunolm.github.io/piano-web/)
 
 ## Features
 
