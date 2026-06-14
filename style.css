@@ -428,15 +428,23 @@ kbd {
 .song-item__text {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0; /* let the title shrink/ellipsize so the row stays one line */
 }
 
 .song-item__title {
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .song-item__sub {
   font-size: 0.72rem;
   color: #9a9ab0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- Key guide (play it yourself) ---------- */
@@ -473,29 +481,18 @@ kbd {
 
 .key-chip {
   flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-  min-width: 1.9rem;
-  padding: 0.3rem 0.35rem;
+  min-width: 1.7rem;
+  padding: 0.35rem 0.45rem;
+  text-align: center;
+  font: 700 1rem/1 ui-monospace, "Cascadia Code", "Consolas", monospace;
+  color: var(--text);
   background: #2a2a3c;
   border: 1px solid #3d3d52;
-  border-bottom-width: 2px;
-  border-radius: 6px;
+  border-bottom-width: 3px;
+  border-radius: 7px;
 }
 
-.key-chip__key {
-  font: 700 0.9rem/1 ui-monospace, "Cascadia Code", "Consolas", monospace;
-  color: var(--text);
-}
-
-.key-chip__note {
-  font-size: 0.6rem;
-  color: #9a9ab0;
-}
-
-.key-chip--none .key-chip__key {
+.key-chip--none {
   color: #7a7a8c;
 }
 

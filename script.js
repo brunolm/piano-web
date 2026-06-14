@@ -4,10 +4,11 @@
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const WHITE_OFFSETS = new Set([0, 2, 4, 5, 7, 9, 11]); // semitone offsets that are white keys
 
-// The computer-keyboard letter rows map to consecutive semitones from the keyboard's first
-// note: the a–' row covers the first 18, then the z–/ row continues with the keys after it.
-const KEY_ROW = ["a", "w", "s", "e", "d", "f", "t", "g", "y", "h", "u", "j", "k", "o", "l", "p", ";", "'"];
-const KEY_ROW2 = ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"];
+// White keys are played by the two lower letter rows (A–' then Z–/); black keys by the
+// number row (`–=) then the QWERTY row (Q–\). Each list maps in order to the white / black
+// keys of the current keyboard, left to right.
+const WHITE_KEYS = ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "z", "x", "c", "v", "b", "n", "m", ",", ".", "/"];
+const BLACK_KEYS = ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"];
 
 // Auto-play songs. `notes` is an absolute-time list of [midi, startSeconds, durationSeconds]
 // triples. Entries without `notes` render as locked placeholders. ReawakeR is the single-voice
@@ -94,9 +95,11 @@ function buildKeyboard() {
     }
   }
   whiteKeys.forEach((el) => piano.appendChild(el));
+  const whiteMidis = whiteKeys.map((el) => Number(el.dataset.midi));
 
   // Black keys overlay between the appropriate white keys.
   const whiteWidthPct = 100 / whiteKeys.length;
+  const blackMidis = [];
   let whiteIndex = 0;
   for (let i = 0; i < totalSemitones; i++) {
     const midi = startMidi + i;
@@ -109,9 +112,10 @@ function buildKeyboard() {
     black.style.left = `${whiteIndex * whiteWidthPct}%`;
     black.style.width = `${whiteWidthPct * 0.62}%`;
     piano.appendChild(black);
+    blackMidis.push(midi);
   }
 
-  assignComputerKeys(startMidi);
+  assignComputerKeys(whiteMidis, blackMidis);
   applyLabelVisibility();
 }
 
@@ -130,16 +134,13 @@ function createKey(midi, isBlack) {
   return el;
 }
 
-function assignComputerKeys(startMidi) {
-  // Lay the two letter rows out as one continuous chromatic run from the first key.
-  let offset = 0;
-  for (const row of [KEY_ROW, KEY_ROW2]) {
-    row.forEach((char, i) => {
-      const midi = startMidi + offset + i;
-      if (keyElements.has(midi)) codeToMidi.set(char, midi);
-    });
-    offset += row.length;
-  }
+function assignComputerKeys(whiteMidis, blackMidis) {
+  WHITE_KEYS.forEach((char, i) => {
+    if (whiteMidis[i] !== undefined) codeToMidi.set(char, whiteMidis[i]);
+  });
+  BLACK_KEYS.forEach((char, i) => {
+    if (blackMidis[i] !== undefined) codeToMidi.set(char, blackMidis[i]);
+  });
 }
 
 function noteLabel(midi) {
@@ -420,16 +421,10 @@ function showKeys(song) {
 
   keyGuideStrip.innerHTML = "";
   for (const [midi] of song.notes) {
-    const chip = document.createElement("span");
     const k = keyForMidi.get(midi);
+    const chip = document.createElement("kbd");
     chip.className = "key-chip" + (k ? "" : " key-chip--none");
-    const keyEl = document.createElement("span");
-    keyEl.className = "key-chip__key";
-    keyEl.textContent = k ? k.toUpperCase() : "·";
-    const noteEl = document.createElement("span");
-    noteEl.className = "key-chip__note";
-    noteEl.textContent = noteLabel(midi);
-    chip.append(keyEl, noteEl);
+    chip.textContent = k ? k.toUpperCase() : "·";
     keyGuideStrip.appendChild(chip);
   }
   keyGuideTitle.textContent = "Keys to play — " + song.title;
