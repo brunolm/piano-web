@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="description" content="A responsive, touch-friendly web piano you can play in any browser." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Web Piano</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🎹&lt;/text&gt;&lt;/svg&gt;" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="title">🎹 Web Piano</h1>
+    <div class="controls">
+      <label class="control">
+        <span>Octaves</span>
+        <input id="octaveCount" type="range" min="1" max="4" step="1" value="2" />
+      </label>
+      <label class="control">
+        <span>Start</span>
+        <select id="startOctave">
+          <option value="2">C2</option>
+          <option value="3" selected>C3</option>
+          <option value="4">C4</option>
+          <option value="5">C5</option>
+        </select>
+      </label>
+      <label class="control control--toggle">
+        <input id="showLabels" type="checkbox" checked />
+        <span>Labels</span>
+      </label>
+      <label class="control">
+        <span>Volume</span>
+        <input id="volume" type="range" min="0" max="100" step="1" value="70" />
+      </label>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div id="piano" class="piano" role="application" aria-label="Piano keyboard"></div>
+    <p class="hint" id="hint">Tap or click the keys — or use your computer keyboard (A&nbsp;S&nbsp;D&nbsp;F&nbsp;…).</p>
+  </main>
+
+  <footer class="footer">
+    <span>Built for the browser · works offline · <a href="https://github.com/brunolm/piano-web" target="_blank" rel="noopener">source</a></span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
