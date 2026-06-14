@@ -54,6 +54,13 @@ body {
   white-space: nowrap;
 }
 
+.version {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #7a7a8c;
+  vertical-align: middle;
+}
+
 .songs-btn {
   margin-left: 0.5rem;
   padding: 0.35rem 0.8rem;
