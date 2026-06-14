@@ -19,13 +19,14 @@
     <div class="controls">
       <label class="control">
         <span>Octaves</span>
-        <input id="octaveCount" type="range" min="1" max="4" step="1" value="2" />
+        <input id="octaveCount" type="range" min="1" max="6" step="1" value="4" />
       </label>
       <label class="control">
         <span>Start</span>
         <select id="startOctave">
-          <option value="2">C2</option>
-          <option value="3" selected>C3</option>
+          <option value="1">C1</option>
+          <option value="2" selected>C2</option>
+          <option value="3">C3</option>
           <option value="4">C4</option>
           <option value="5">C5</option>
         </select>
@@ -36,7 +37,7 @@
       </label>
       <label class="control">
         <span>Volume</span>
-        <input id="volume" type="range" min="0" max="100" step="1" value="70" />
+        <input id="volume" type="range" min="0" max="100" step="1" value="50" />
       </label>
     </div>
   </header>
@@ -70,8 +71,10 @@
         <button class="modal__close" type="button" data-close aria-label="Close">×</button>
       </header>
       <dl class="shortcuts">
-        <dt><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd><kbd>;</kbd><kbd>'</kbd></dt>
+        <dt><kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd><kbd>B</kbd><kbd>N</kbd><kbd>M</kbd><kbd>,</kbd><kbd>.</kbd><kbd>/</kbd></dt>
         <dd>White keys, left → right</dd>
+        <dt><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd><kbd>;</kbd><kbd>'</kbd></dt>
+        <dd>White keys (home row)</dd>
         <dt><kbd>W</kbd><kbd>E</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>O</kbd><kbd>P</kbd></dt>
         <dd>Black keys (sharps / flats)</dd>
         <dt><kbd>?</kbd></dt>
@@ -86,6 +89,6 @@
     <span>Built for the browser · works offline · <a href="https://github.com/brunolm/piano-web" target="_blank" rel="noopener">source</a></span>
   </footer>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>
