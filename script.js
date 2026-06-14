@@ -60,6 +60,7 @@ const songList = document.getElementById("songList");
 const nowPlaying = document.getElementById("nowPlaying");
 const nowPlayingLabel = document.getElementById("nowPlayingLabel");
 const stopBtn = document.getElementById("stopBtn");
+const helpModal = document.getElementById("helpModal");
 
 const audio = createAudioEngine();
 
@@ -78,6 +79,7 @@ wireControls();
 wirePointer();
 wireComputerKeyboard();
 wireSongs();
+wireHelp();
 showVersion();
 
 // ---------- Keyboard construction ----------
@@ -329,6 +331,32 @@ function openSongsModal() {
 
 function closeSongsModal() {
   songsModal.hidden = true;
+}
+
+// ---------- Help (keyboard shortcuts) ----------
+
+function wireHelp() {
+  helpModal.addEventListener("click", (e) => {
+    if (e.target.hasAttribute("data-close")) helpModal.hidden = true;
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === "?") {
+      e.preventDefault();
+      toggleHelp();
+    } else if (e.key === "Escape" && !helpModal.hidden) {
+      helpModal.hidden = true;
+    }
+  });
+}
+
+function toggleHelp() {
+  if (helpModal.hidden) {
+    closeSongsModal();
+    helpModal.hidden = false;
+  } else {
+    helpModal.hidden = true;
+  }
 }
 
 function playSong(song) {
