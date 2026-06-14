@@ -7,29 +7,44 @@ const WHITE_OFFSETS = new Set([0, 2, 4, 5, 7, 9, 11]); // semitone offsets that 
 // Computer-keyboard row mapped to consecutive semitones, starting at the piano's first note.
 const KEY_ROW = ["a", "w", "s", "e", "d", "f", "t", "g", "y", "h", "u", "j", "k", "o", "l", "p", ";", "'"];
 
-// Auto-play songs. `notes` is a sequence of { n, d } steps played back-to-back:
-//   n = note name ("E4"), an array of names for a chord (["E3","B4"]), or null for a rest;
-//   d = duration in beats. `tempo` is in BPM. Entries without `notes` render as locked placeholders.
-// ReawakeR is a melodic arrangement of the Solo Leveling S2 opening's main theme (E minor, ~130 BPM).
-const REAWAKER_NOTES = [
-  { n: "E4", d: 0.5 }, { n: "E4", d: 0.5 }, { n: "G4", d: 0.5 }, { n: "B4", d: 0.5 },
-  { n: "A4", d: 0.5 }, { n: "G4", d: 0.5 }, { n: "F#4", d: 1 },
-  { n: "E4", d: 0.5 }, { n: "E4", d: 0.5 }, { n: "G4", d: 0.5 }, { n: "B4", d: 0.5 },
-  { n: "D5", d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 1 },
-  { n: ["E3", "B4"], d: 0.5 }, { n: "C5", d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 0.5 },
-  { n: ["G3", "G4"], d: 0.5 }, { n: "A4", d: 0.5 }, { n: "B4", d: 1 },
-  { n: ["C4", "C5"], d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 0.5 }, { n: "G4", d: 0.5 },
-  { n: ["D4", "F#4"], d: 0.5 }, { n: "A4", d: 0.5 }, { n: "G4", d: 1 },
-  { n: ["E3", "E4"], d: 0.5 }, { n: "B4", d: 0.5 }, { n: "E5", d: 1 },
-  { n: "D5", d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 0.5 }, { n: "G4", d: 0.5 },
-  { n: "F#4", d: 0.5 }, { n: "E4", d: 0.5 }, { n: "F#4", d: 0.5 }, { n: "G4", d: 0.5 },
-  { n: "A4", d: 1 }, { n: null, d: 0.5 }, { n: "B4", d: 0.5 },
-  { n: ["E3", "E5"], d: 1 }, { n: ["B3", "D5"], d: 0.5 }, { n: "B4", d: 0.5 },
-  { n: ["E3", "E4"], d: 2 },
+// Auto-play songs. `notes` is an absolute-time list of [midi, startSeconds, durationSeconds]
+// triples (played back through the live audio engine). Entries without `notes` render as
+// locked placeholders. ReawakeR is the lead/solo line transcribed from the community "MEDIUM"
+// sequence at onlinesequencer.net/4589659 (Solo Leveling S2 opening, B minor).
+const REAWAKER_SOLO = [
+  [90,0.3,1.41],[86,1.5,0.93],[86,2.7,0.48],[83,3.19,0.93],[83,4.39,0.45],[88,5.59,1.41],
+  [88,6.79,0.45],[95,7.5,0.22],[95,7.72,0.22],[93,7.85,0.35],[95,7.95,0.22],[95,8.17,0.96],
+  [93,8.52,0.61],[90,8.87,0.26],[95,9.36,0.22],[95,9.58,0.22],[95,9.8,0.26],[93,9.93,0.13],
+  [95,10.06,0.93],[93,10.41,0.58],[90,10.76,0.23],[90,11.21,0.35],[90,11.56,0.13],[90,11.69,0.23],
+  [90,11.92,0.22],[90,12.14,0.22],[90,12.36,0.35],[88,12.62,0.22],[90,12.72,0.13],[90,13.07,0.35],
+  [90,13.42,0.13],[90,13.55,0.22],[90,13.77,0.22],[90,13.99,0.22],[90,14.22,0.35],[88,14.47,0.23],
+  [90,14.57,0.13],[86,14.7,1.89],[90,14.92,1.63],[95,15.18,0.45],[95,15.63,0.71],[93,16.11,0.48],
+  [95,16.33,0.26],[88,16.56,1.86],[93,16.78,0.26],[93,17.04,0.93],[90,17.26,1.15],[95,17.48,0.71],
+  [93,17.96,0.45],[95,18.19,0.22],[90,18.41,1.63],[95,18.67,0.45],[94,18.89,0.93],[95,19.11,0.48],
+  [95,19.59,0.9],[94,19.82,0.67],[90,20.04,0.45],[86,21.24,0.22],[86,22.17,0.35],[90,23.1,0.26],
+  [90,24.03,0.35],[90,24.38,0.13],[88,24.96,0.26],[88,25.91,0.32],[88,26.23,0.13],[83,26.81,0.26],
+  [83,27.77,0.35],[86,28.22,0.48],[86,28.7,0.22],[86,29.63,0.35],[90,30.56,0.22],[90,31.48,0.35],
+  [88,32.41,0.26],[88,33.34,0.35],[88,33.69,0.13],[88,34.27,0.35],[88,34.62,0.13],[88,34.75,0.67],
+  [83,35.2,0.48],[88,35.42,0.26],[86,35.68,0.45],[90,36.12,0.13],[90,36.25,0.13],[90,36.48,0.13],
+  [90,36.6,0.23],[90,36.83,0.48],[86,37.05,0.35],[90,37.4,0.13],[90,37.53,0.23],[90,37.76,0.22],
+  [90,37.98,0.26],[90,38.91,0.35],[90,39.26,0.13],[88,39.87,0.22],[93,40.19,0.13],[93,40.32,0.93],
+  [90,40.54,0.7],[88,40.8,0.35],[95,41.02,0.13],[95,41.24,0.22],[95,41.47,0.48],[83,41.72,0.22],
+  [83,42.65,0.35],[86,43.1,0.48],[86,43.58,0.22],[90,43.68,0.13],[90,44.03,0.26],[90,44.28,0.45],
+  [86,44.51,0.35],[90,44.73,0.13],[90,44.96,0.26],[90,45.21,0.22],[90,45.43,0.23],[90,46.36,0.35],
+  [88,47.29,0.23],[93,47.64,0.13],[93,47.77,0.93],[90,48,0.7],[88,48.22,0.35],[95,48.44,0.13],
+  [95,48.57,0.13],[95,48.7,0.22],[95,48.92,0.48],[88,49.15,0.26],[88,49.5,0.13],[88,49.63,0.7],
+  [83,50.08,0.48],[88,50.33,0.23],[86,50.56,0.93],[86,51.48,0.7],[86,52.19,0.22],[90,53.34,0.7],
+  [90,54.04,0.22],[88,54.27,0.71],[88,54.97,0.22],[88,55.2,0.7],[88,55.9,0.22],[83,57.05,0.7],
+  [83,57.76,0.22],[86,57.98,0.96],[86,58.94,0.67],[86,59.61,0.22],[90,60.8,0.67],[90,61.47,0.22],
+  [88,61.72,0.93],[88,62.65,0.7],[88,63.36,0.22],[88,64.51,0.7],[88,65.21,0.22],[86,65.79,0.13],
+  [90,66.23,0.13],[90,66.36,0.22],[90,66.59,0.48],[90,67.07,0.22],[86,67.16,0.13],[90,68.12,0.8],
+  [90,68.92,0.13],[88,69.5,0.13],[93,69.85,0.13],[88,69.98,0.93],[93,70.08,0.93],[90,70.33,0.7],
+  [95,70.78,0.26],[83,70.91,0.13],[93,71.26,0.26],[83,71.36,0.13],[93,71.71,0.13],[93,71.83,1.02],
+  [92,71.96,0.9],[90,72.19,0.67],[83,72.63,0.23],
 ];
 
 const SONGS = [
-  { title: "Solo Leveling — ReawakeR", subtitle: "LiSA feat. Felix · main theme", tempo: 130, notes: REAWAKER_NOTES },
+  { title: "Solo Leveling — ReawakeR", subtitle: "LiSA feat. Felix · lead line", notes: REAWAKER_SOLO },
   { title: "Placeholder 2" },
   { title: "Placeholder 3" },
   { title: "Placeholder 4" },
@@ -63,6 +78,7 @@ const heldKeyboardNotes = new Set(); // midi notes held via computer keyboard
 
 let autoplayTimers = []; // pending setTimeout ids for the current auto-play
 const autoplayNotes = new Set(); // midi notes currently sounded by auto-play
+let savedKeyboard = null; // user's octave layout, saved while a song retunes the keyboard
 
 buildKeyboard();
 wireControls();
@@ -314,23 +330,15 @@ function closeSongsModal() {
 function playSong(song) {
   stopAutoplay();
   audio.resume(); // unlock the AudioContext within this click gesture (needed on mobile)
+  fitKeyboardToSong(song);
 
-  const beat = 60 / song.tempo;
-  let t = 0;
-  for (const step of song.notes) {
-    const dur = step.d * beat;
-    if (step.n) {
-      const midis = (Array.isArray(step.n) ? step.n : [step.n]).map(parseNoteName);
-      const onMs = t * 1000;
-      const offMs = (t + dur * 0.92) * 1000; // small gap so repeated notes retrigger
-      for (const midi of midis) {
-        autoplayTimers.push(setTimeout(() => autoNoteOn(midi), onMs));
-        autoplayTimers.push(setTimeout(() => autoNoteOff(midi), offMs));
-      }
-    }
-    t += dur;
+  let end = 0;
+  for (const [midi, start, dur] of song.notes) {
+    autoplayTimers.push(setTimeout(() => autoNoteOn(midi), start * 1000));
+    autoplayTimers.push(setTimeout(() => autoNoteOff(midi), (start + dur) * 1000));
+    end = Math.max(end, start + dur);
   }
-  autoplayTimers.push(setTimeout(stopAutoplay, t * 1000 + 250));
+  autoplayTimers.push(setTimeout(stopAutoplay, end * 1000 + 400));
 
   nowPlayingLabel.textContent = "▶ " + song.title;
   nowPlaying.hidden = false;
@@ -341,7 +349,32 @@ function stopAutoplay() {
   autoplayTimers = [];
   autoplayNotes.forEach(autoNoteOff);
   autoplayNotes.clear();
+  restoreKeyboard();
   nowPlaying.hidden = true;
+}
+
+// Temporarily retune the visible keyboard to the song's pitch range so the keys
+// light up as it plays; stopAutoplay() restores the user's chosen octave layout.
+function fitKeyboardToSong(song) {
+  const midis = song.notes.map((n) => n[0]);
+  const lo = Math.min(...midis);
+  const hi = Math.max(...midis);
+  const startOctave = Math.min(5, Math.max(2, Math.floor(lo / 12) - 1));
+  const startMidi = 12 * (startOctave + 1);
+  const octaves = Math.min(4, Math.max(1, Math.ceil((hi - startMidi + 1) / 12)));
+
+  savedKeyboard = { start: startOctaveInput.value, count: octaveCountInput.value };
+  startOctaveInput.value = String(startOctave);
+  octaveCountInput.value = String(octaves);
+  buildKeyboard();
+}
+
+function restoreKeyboard() {
+  if (!savedKeyboard) return;
+  startOctaveInput.value = savedKeyboard.start;
+  octaveCountInput.value = savedKeyboard.count;
+  savedKeyboard = null;
+  buildKeyboard();
 }
 
 function autoNoteOn(midi) {
@@ -357,13 +390,6 @@ function autoNoteOff(midi) {
   audio.noteOff(midi);
   const el = keyElements.get(midi);
   if (el && !isNoteHeldElsewhere(midi, null)) el.classList.remove("is-active");
-}
-
-function parseNoteName(name) {
-  const match = /^([A-G]#?)(-?\d)$/.exec(name);
-  const semitone = NOTE_NAMES.indexOf(match[1]);
-  const octave = Number(match[2]);
-  return semitone + (octave + 1) * 12;
 }
 
 // ---------- Audio engine (Web Audio API) ----------
