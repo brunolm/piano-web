@@ -15,6 +15,7 @@
 <body>
   <header class="topbar">
     <h1 class="title">🎹 Web Piano</h1>
+    <button id="songsBtn" class="songs-btn" type="button" aria-haspopup="dialog" aria-controls="songsModal">♫ Auto-play</button>
     <div class="controls">
       <label class="control">
         <span>Octaves</span>
@@ -43,7 +44,23 @@
   <main class="stage">
     <div id="piano" class="piano" role="application" aria-label="Piano keyboard"></div>
     <p class="hint" id="hint">Tap or click the keys — or use your computer keyboard (A&nbsp;S&nbsp;D&nbsp;F&nbsp;…).</p>
+
+    <div id="nowPlaying" class="now-playing" hidden>
+      <span id="nowPlayingLabel">Playing…</span>
+      <button id="stopBtn" class="stop-btn" type="button">■ Stop</button>
+    </div>
   </main>
+
+  <div id="songsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="songsTitle" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="document">
+      <header class="modal__head">
+        <h2 id="songsTitle">Auto-play a song</h2>
+        <button class="modal__close" type="button" data-close aria-label="Close">×</button>
+      </header>
+      <ul id="songList" class="song-list"></ul>
+    </div>
+  </div>
 
   <footer class="footer">
     <span>Built for the browser · works offline · <a href="https://github.com/brunolm/piano-web" target="_blank" rel="noopener">source</a></span>

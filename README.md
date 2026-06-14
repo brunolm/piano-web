@@ -10,6 +10,7 @@ A single-page, responsive, touch-friendly piano you can play in any modern brows
 - **Mouse & computer keyboard** — click keys, or use the `A W S E D F T G…` row.
 - **Responsive layout** — adapts to portrait, landscape, phones, and large screens.
 - **Configurable** — pick the starting octave, number of octaves (1–4), toggle note labels, and adjust volume.
+- **Auto-play** — the **♫ Auto-play** button opens a song picker; the first entry plays a melodic arrangement of Solo Leveling Season 2's opening theme *ReawakeR* (slots 2–10 are placeholders). Keys light up as it plays; a **Stop** button halts it.
 - **Zero install** — a static site (`index.html` + `style.css` + `script.js`).
 
 ## Run locally

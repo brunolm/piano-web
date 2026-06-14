@@ -7,11 +7,51 @@ const WHITE_OFFSETS = new Set([0, 2, 4, 5, 7, 9, 11]); // semitone offsets that 
 // Computer-keyboard row mapped to consecutive semitones, starting at the piano's first note.
 const KEY_ROW = ["a", "w", "s", "e", "d", "f", "t", "g", "y", "h", "u", "j", "k", "o", "l", "p", ";", "'"];
 
+// Auto-play songs. `notes` is a sequence of { n, d } steps played back-to-back:
+//   n = note name ("E4"), an array of names for a chord (["E3","B4"]), or null for a rest;
+//   d = duration in beats. `tempo` is in BPM. Entries without `notes` render as locked placeholders.
+// ReawakeR is a melodic arrangement of the Solo Leveling S2 opening's main theme (E minor, ~130 BPM).
+const REAWAKER_NOTES = [
+  { n: "E4", d: 0.5 }, { n: "E4", d: 0.5 }, { n: "G4", d: 0.5 }, { n: "B4", d: 0.5 },
+  { n: "A4", d: 0.5 }, { n: "G4", d: 0.5 }, { n: "F#4", d: 1 },
+  { n: "E4", d: 0.5 }, { n: "E4", d: 0.5 }, { n: "G4", d: 0.5 }, { n: "B4", d: 0.5 },
+  { n: "D5", d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 1 },
+  { n: ["E3", "B4"], d: 0.5 }, { n: "C5", d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 0.5 },
+  { n: ["G3", "G4"], d: 0.5 }, { n: "A4", d: 0.5 }, { n: "B4", d: 1 },
+  { n: ["C4", "C5"], d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 0.5 }, { n: "G4", d: 0.5 },
+  { n: ["D4", "F#4"], d: 0.5 }, { n: "A4", d: 0.5 }, { n: "G4", d: 1 },
+  { n: ["E3", "E4"], d: 0.5 }, { n: "B4", d: 0.5 }, { n: "E5", d: 1 },
+  { n: "D5", d: 0.5 }, { n: "B4", d: 0.5 }, { n: "A4", d: 0.5 }, { n: "G4", d: 0.5 },
+  { n: "F#4", d: 0.5 }, { n: "E4", d: 0.5 }, { n: "F#4", d: 0.5 }, { n: "G4", d: 0.5 },
+  { n: "A4", d: 1 }, { n: null, d: 0.5 }, { n: "B4", d: 0.5 },
+  { n: ["E3", "E5"], d: 1 }, { n: ["B3", "D5"], d: 0.5 }, { n: "B4", d: 0.5 },
+  { n: ["E3", "E4"], d: 2 },
+];
+
+const SONGS = [
+  { title: "Solo Leveling — ReawakeR", subtitle: "LiSA feat. Felix · main theme", tempo: 130, notes: REAWAKER_NOTES },
+  { title: "Placeholder 2" },
+  { title: "Placeholder 3" },
+  { title: "Placeholder 4" },
+  { title: "Placeholder 5" },
+  { title: "Placeholder 6" },
+  { title: "Placeholder 7" },
+  { title: "Placeholder 8" },
+  { title: "Placeholder 9" },
+  { title: "Placeholder 10" },
+];
+
 const piano = document.getElementById("piano");
 const octaveCountInput = document.getElementById("octaveCount");
 const startOctaveInput = document.getElementById("startOctave");
 const showLabelsInput = document.getElementById("showLabels");
 const volumeInput = document.getElementById("volume");
+const songsBtn = document.getElementById("songsBtn");
+const songsModal = document.getElementById("songsModal");
+const songList = document.getElementById("songList");
+const nowPlaying = document.getElementById("nowPlaying");
+const nowPlayingLabel = document.getElementById("nowPlayingLabel");
+const stopBtn = document.getElementById("stopBtn");
 
 const audio = createAudioEngine();
 
@@ -21,10 +61,14 @@ let codeToMidi = new Map();
 const activePointerNotes = new Map(); // pointerId -> midi currently sounding
 const heldKeyboardNotes = new Set(); // midi notes held via computer keyboard
 
+let autoplayTimers = []; // pending setTimeout ids for the current auto-play
+const autoplayNotes = new Set(); // midi notes currently sounded by auto-play
+
 buildKeyboard();
 wireControls();
 wirePointer();
 wireComputerKeyboard();
+wireSongs();
 
 // ---------- Keyboard construction ----------
 
@@ -212,6 +256,116 @@ function noteOff(midi) {
   if (el) el.classList.remove("is-active");
 }
 
+// ---------- Auto-play (songs modal) ----------
+
+function wireSongs() {
+  buildSongList();
+  songsBtn.addEventListener("click", openSongsModal);
+  stopBtn.addEventListener("click", stopAutoplay);
+  songsModal.addEventListener("click", (e) => {
+    if (e.target.hasAttribute("data-close")) closeSongsModal();
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !songsModal.hidden) closeSongsModal();
+  });
+}
+
+function buildSongList() {
+  songList.innerHTML = "";
+  SONGS.forEach((song, i) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.className = "song-item";
+    btn.type = "button";
+    btn.disabled = !song.notes;
+
+    const num = document.createElement("span");
+    num.className = "song-item__num";
+    num.textContent = String(i + 1);
+
+    const text = document.createElement("span");
+    text.className = "song-item__text";
+    const title = document.createElement("span");
+    title.className = "song-item__title";
+    title.textContent = song.title;
+    const sub = document.createElement("span");
+    sub.className = "song-item__sub";
+    sub.textContent = song.notes ? song.subtitle : "Coming soon";
+    text.append(title, sub);
+
+    btn.append(num, text);
+    if (song.notes) btn.addEventListener("click", () => {
+      closeSongsModal();
+      playSong(song);
+    });
+    li.appendChild(btn);
+    songList.appendChild(li);
+  });
+}
+
+function openSongsModal() {
+  songsModal.hidden = false;
+}
+
+function closeSongsModal() {
+  songsModal.hidden = true;
+}
+
+function playSong(song) {
+  stopAutoplay();
+  audio.resume(); // unlock the AudioContext within this click gesture (needed on mobile)
+
+  const beat = 60 / song.tempo;
+  let t = 0;
+  for (const step of song.notes) {
+    const dur = step.d * beat;
+    if (step.n) {
+      const midis = (Array.isArray(step.n) ? step.n : [step.n]).map(parseNoteName);
+      const onMs = t * 1000;
+      const offMs = (t + dur * 0.92) * 1000; // small gap so repeated notes retrigger
+      for (const midi of midis) {
+        autoplayTimers.push(setTimeout(() => autoNoteOn(midi), onMs));
+        autoplayTimers.push(setTimeout(() => autoNoteOff(midi), offMs));
+      }
+    }
+    t += dur;
+  }
+  autoplayTimers.push(setTimeout(stopAutoplay, t * 1000 + 250));
+
+  nowPlayingLabel.textContent = "▶ " + song.title;
+  nowPlaying.hidden = false;
+}
+
+function stopAutoplay() {
+  autoplayTimers.forEach(clearTimeout);
+  autoplayTimers = [];
+  autoplayNotes.forEach(autoNoteOff);
+  autoplayNotes.clear();
+  nowPlaying.hidden = true;
+}
+
+function autoNoteOn(midi) {
+  autoplayNotes.add(midi);
+  audio.noteOff(midi); // release any lingering voice so the same pitch retriggers cleanly
+  audio.noteOn(midi);
+  const el = keyElements.get(midi);
+  if (el) el.classList.add("is-active");
+}
+
+function autoNoteOff(midi) {
+  autoplayNotes.delete(midi);
+  audio.noteOff(midi);
+  const el = keyElements.get(midi);
+  if (el && !isNoteHeldElsewhere(midi, null)) el.classList.remove("is-active");
+}
+
+function parseNoteName(name) {
+  const match = /^([A-G]#?)(-?\d)$/.exec(name);
+  const semitone = NOTE_NAMES.indexOf(match[1]);
+  const octave = Number(match[2]);
+  return semitone + (octave + 1) * 12;
+}
+
 // ---------- Audio engine (Web Audio API) ----------
 
 function createAudioEngine() {
@@ -277,5 +431,5 @@ function createAudioEngine() {
     if (master) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.01);
   }
 
-  return { noteOn, noteOff, setVolume };
+  return { noteOn, noteOff, setVolume, resume: ensureContext };
 }
