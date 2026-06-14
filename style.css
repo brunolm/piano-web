@@ -361,31 +361,56 @@ kbd {
   overflow-y: auto;
 }
 
-.song-item {
+.song-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.7rem;
   width: 100%;
-  padding: 0.7rem 0.85rem;
+  padding: 0.55rem 0.65rem;
   margin-bottom: 0.4rem;
-  text-align: left;
   color: var(--text);
-  background: #23233408;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid transparent;
   border-radius: 10px;
-  cursor: pointer;
   font-size: 0.92rem;
 }
 
-.song-item:hover:not(:disabled) {
-  background: rgba(233, 69, 96, 0.16);
-  border-color: rgba(233, 69, 96, 0.5);
+.song-row--locked {
+  opacity: 0.45;
 }
 
-.song-item:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.song-row__actions {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.song-btn {
+  padding: 0.34rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.song-btn--ghost {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text);
+}
+
+.song-btn:hover {
+  filter: brightness(1.1);
+}
+
+.song-row__soon {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #9a9ab0;
 }
 
 .song-item__num {
@@ -412,6 +437,83 @@ kbd {
 .song-item__sub {
   font-size: 0.72rem;
   color: #9a9ab0;
+}
+
+/* ---------- Key guide (play it yourself) ---------- */
+.key-guide {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.key-guide[hidden] {
+  display: none;
+}
+
+.key-guide__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.key-guide__strip {
+  display: flex;
+  gap: 0.3rem;
+  overflow-x: auto;
+  padding: 0.5rem;
+  background: var(--panel);
+  border: 1px solid #2b2b3d;
+  border-radius: 10px;
+  scrollbar-width: thin;
+}
+
+.key-chip {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 1.9rem;
+  padding: 0.3rem 0.35rem;
+  background: #2a2a3c;
+  border: 1px solid #3d3d52;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+}
+
+.key-chip__key {
+  font: 700 0.9rem/1 ui-monospace, "Cascadia Code", "Consolas", monospace;
+  color: var(--text);
+}
+
+.key-chip__note {
+  font-size: 0.6rem;
+  color: #9a9ab0;
+}
+
+.key-chip--none .key-chip__key {
+  color: #7a7a8c;
+}
+
+/* Computer-key hints drawn on the keys while a song's keys are shown */
+.key__shortcut {
+  position: absolute;
+  top: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 700 0.74rem/1 ui-monospace, "Consolas", monospace;
+  color: var(--accent);
+  pointer-events: none;
+}
+
+.key--black .key__shortcut {
+  top: 0.25rem;
+  font-size: 0.62rem;
+  color: #ffd2da;
 }
 
 /* Narrow phones: let labels be optional, shrink chrome */

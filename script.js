@@ -4,10 +4,10 @@
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const WHITE_OFFSETS = new Set([0, 2, 4, 5, 7, 9, 11]); // semitone offsets that are white keys
 
-// Top two computer-keyboard rows map to consecutive semitones (white + black) from the
-// keyboard's first note; the bottom letter row maps to consecutive white keys.
+// The computer-keyboard letter rows map to consecutive semitones from the keyboard's first
+// note: the a–' row covers the first 18, then the z–/ row continues with the keys after it.
 const KEY_ROW = ["a", "w", "s", "e", "d", "f", "t", "g", "y", "h", "u", "j", "k", "o", "l", "p", ";", "'"];
-const WHITE_ROW = ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"];
+const KEY_ROW2 = ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"];
 
 // Auto-play songs. `notes` is an absolute-time list of [midi, startSeconds, durationSeconds]
 // triples. Entries without `notes` render as locked placeholders. ReawakeR is the single-voice
@@ -48,6 +48,10 @@ const nowPlaying = document.getElementById("nowPlaying");
 const nowPlayingLabel = document.getElementById("nowPlayingLabel");
 const stopBtn = document.getElementById("stopBtn");
 const helpModal = document.getElementById("helpModal");
+const keyGuide = document.getElementById("keyGuide");
+const keyGuideStrip = document.getElementById("keyGuideStrip");
+const keyGuideTitle = document.getElementById("keyGuideTitle");
+const keyGuideClose = document.getElementById("keyGuideClose");
 
 const audio = createAudioEngine();
 
@@ -77,6 +81,7 @@ function buildKeyboard() {
   const totalSemitones = octaves * 12 + 1; // include the trailing C to close the last octave
 
   piano.innerHTML = "";
+  piano.classList.remove("show-shortcuts");
   keyElements = new Map();
   codeToMidi = new Map();
 
@@ -89,7 +94,6 @@ function buildKeyboard() {
     }
   }
   whiteKeys.forEach((el) => piano.appendChild(el));
-  const whiteMidis = whiteKeys.map((el) => Number(el.dataset.midi));
 
   // Black keys overlay between the appropriate white keys.
   const whiteWidthPct = 100 / whiteKeys.length;
@@ -107,7 +111,7 @@ function buildKeyboard() {
     piano.appendChild(black);
   }
 
-  assignComputerKeys(startMidi, whiteMidis);
+  assignComputerKeys(startMidi);
   applyLabelVisibility();
 }
 
@@ -126,18 +130,16 @@ function createKey(midi, isBlack) {
   return el;
 }
 
-function assignComputerKeys(startMidi, whiteMidis) {
-  KEY_ROW.forEach((char, i) => {
-    const midi = startMidi + i;
-    if (keyElements.has(midi)) {
-      codeToMidi.set(char, midi);
-    }
-  });
-  WHITE_ROW.forEach((char, j) => {
-    if (whiteMidis[j] !== undefined) {
-      codeToMidi.set(char, whiteMidis[j]);
-    }
-  });
+function assignComputerKeys(startMidi) {
+  // Lay the two letter rows out as one continuous chromatic run from the first key.
+  let offset = 0;
+  for (const row of [KEY_ROW, KEY_ROW2]) {
+    row.forEach((char, i) => {
+      const midi = startMidi + offset + i;
+      if (keyElements.has(midi)) codeToMidi.set(char, midi);
+    });
+    offset += row.length;
+  }
 }
 
 function noteLabel(midi) {
@@ -277,6 +279,7 @@ function wireSongs() {
   buildSongList();
   songsBtn.addEventListener("click", openSongsModal);
   stopBtn.addEventListener("click", stopAutoplay);
+  keyGuideClose.addEventListener("click", stopAutoplay);
   songsModal.addEventListener("click", (e) => {
     if (e.target.hasAttribute("data-close")) closeSongsModal();
   });
@@ -289,10 +292,7 @@ function buildSongList() {
   songList.innerHTML = "";
   SONGS.forEach((song, i) => {
     const li = document.createElement("li");
-    const btn = document.createElement("button");
-    btn.className = "song-item";
-    btn.type = "button";
-    btn.disabled = !song.notes;
+    li.className = "song-row" + (song.notes ? "" : " song-row--locked");
 
     const num = document.createElement("span");
     num.className = "song-item__num";
@@ -303,19 +303,40 @@ function buildSongList() {
     const title = document.createElement("span");
     title.className = "song-item__title";
     title.textContent = song.title;
-    const sub = document.createElement("span");
-    sub.className = "song-item__sub";
-    sub.textContent = song.notes ? song.subtitle : "Coming soon";
-    text.append(title, sub);
+    text.appendChild(title);
+    if (song.notes) {
+      const sub = document.createElement("span");
+      sub.className = "song-item__sub";
+      sub.textContent = song.subtitle;
+      text.appendChild(sub);
+    }
+    li.append(num, text);
 
-    btn.append(num, text);
-    if (song.notes) btn.addEventListener("click", () => {
-      closeSongsModal();
-      playSong(song);
-    });
-    li.appendChild(btn);
+    if (song.notes) {
+      const actions = document.createElement("span");
+      actions.className = "song-row__actions";
+      actions.append(
+        songButton("▶ Play", "song-btn", () => { closeSongsModal(); playSong(song); }),
+        songButton("⌨ Show keys", "song-btn song-btn--ghost", () => { closeSongsModal(); showKeys(song); }),
+      );
+      li.appendChild(actions);
+    } else {
+      const soon = document.createElement("span");
+      soon.className = "song-row__soon";
+      soon.textContent = "Coming soon";
+      li.appendChild(soon);
+    }
     songList.appendChild(li);
   });
+}
+
+function songButton(label, className, onClick) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = className;
+  btn.textContent = label;
+  btn.addEventListener("click", onClick);
+  return btn;
 }
 
 function openSongsModal() {
@@ -337,8 +358,9 @@ function wireHelp() {
     if (e.key === "?") {
       e.preventDefault();
       toggleHelp();
-    } else if (e.key === "Escape" && !helpModal.hidden) {
-      helpModal.hidden = true;
+    } else if (e.key === "Escape") {
+      if (!helpModal.hidden) helpModal.hidden = true;
+      else if (!keyGuide.hidden) stopAutoplay();
     }
   });
 }
@@ -376,6 +398,52 @@ function stopAutoplay() {
   autoplayNotes.clear();
   restoreKeyboard();
   nowPlaying.hidden = true;
+  keyGuide.hidden = true;
+}
+
+// "Show keys": instead of playing, retune the keyboard to the song and lay out the
+// sequence of computer keys to press (and label the on-screen keys) so it can be played by hand.
+function showKeys(song) {
+  stopAutoplay();
+  fitKeyboardToSong(song);
+
+  const keyForMidi = invertKeyMap();
+  keyElements.forEach((el, midi) => {
+    const k = keyForMidi.get(midi);
+    if (!k) return;
+    const tag = document.createElement("span");
+    tag.className = "key__shortcut";
+    tag.textContent = k.toUpperCase();
+    el.appendChild(tag);
+  });
+  piano.classList.add("show-shortcuts");
+
+  keyGuideStrip.innerHTML = "";
+  for (const [midi] of song.notes) {
+    const chip = document.createElement("span");
+    const k = keyForMidi.get(midi);
+    chip.className = "key-chip" + (k ? "" : " key-chip--none");
+    const keyEl = document.createElement("span");
+    keyEl.className = "key-chip__key";
+    keyEl.textContent = k ? k.toUpperCase() : "·";
+    const noteEl = document.createElement("span");
+    noteEl.className = "key-chip__note";
+    noteEl.textContent = noteLabel(midi);
+    chip.append(keyEl, noteEl);
+    keyGuideStrip.appendChild(chip);
+  }
+  keyGuideTitle.textContent = "Keys to play — " + song.title;
+  keyGuide.hidden = false;
+  keyGuideStrip.scrollLeft = 0;
+}
+
+// midi -> the first computer key that triggers it, for the current keyboard layout.
+function invertKeyMap() {
+  const map = new Map();
+  for (const [key, midi] of codeToMidi) {
+    if (!map.has(midi)) map.set(midi, key);
+  }
+  return map;
 }
 
 // Temporarily retune the visible keyboard to the song's pitch range so the keys
