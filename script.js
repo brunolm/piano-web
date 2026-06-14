@@ -371,8 +371,9 @@ function parseNoteName(name) {
 function createAudioEngine() {
   let ctx = null;
   let master = null;
+  let pianoWave = null;
   let volume = 0.7;
-  const voices = new Map(); // midi -> { osc, gain }
+  const voices = new Map(); // midi -> { oscillators, gain }
 
   function ensureContext() {
     if (ctx) {
@@ -381,9 +382,26 @@ function createAudioEngine() {
     }
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     ctx = new AudioCtx();
+    pianoWave = buildPianoWave();
+
     master = ctx.createGain();
     master.gain.value = volume;
-    master.connect(ctx.destination);
+    // Compressor tames peaks so chords don't clip into harshness.
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.ratio.value = 4;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.25;
+    master.connect(comp);
+    comp.connect(ctx.destination);
+  }
+
+  // A struck-string harmonic spectrum: strong fundamental with quickly
+  // decreasing overtones — much closer to a piano than a bare triangle.
+  function buildPianoWave() {
+    const real = new Float32Array([0, 1, 0.62, 0.43, 0.30, 0.22, 0.16, 0.12, 0.09, 0.07, 0.05, 0.04, 0.03, 0.02]);
+    const imag = new Float32Array(real.length);
+    return ctx.createPeriodicWave(real, imag);
   }
 
   function midiToFreq(midi) {
@@ -395,21 +413,43 @@ function createAudioEngine() {
     if (voices.has(midi)) return;
 
     const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
+    const freq = midiToFreq(midi);
+
+    // Two unison oscillators detuned a few cents — real piano strings beat
+    // slightly against each other, which warms up the tone.
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    osc1.setPeriodicWave(pianoWave);
+    osc2.setPeriodicWave(pianoWave);
+    osc1.frequency.value = freq;
+    osc2.frequency.value = freq;
+    osc1.detune.value = -5;
+    osc2.detune.value = 5;
+
+    // Hammer brightness that fades: open the low-pass, then close it.
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.Q.value = 0.4;
+    filter.frequency.setValueAtTime(Math.min(freq * 6 + 2000, 12000), now);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(freq * 2.5, 700), now + 0.6);
+
+    // Percussive envelope: near-instant attack, then a continuous decay so a
+    // held note rings and fades instead of sustaining flat like an organ/chip.
     const gain = ctx.createGain();
-
-    osc.type = "triangle";
-    osc.frequency.value = midiToFreq(midi);
-
-    // Soft attack so taps don't click.
+    const peak = 0.34;
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.9, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(peak, now + 0.004);
+    gain.gain.exponentialRampToValueAtTime(peak * 0.28, now + 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 8);
 
-    osc.connect(gain);
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
     gain.connect(master);
-    osc.start(now);
+    osc1.start(now);
+    osc2.start(now);
 
-    voices.set(midi, { osc, gain });
+    voices.set(midi, { oscillators: [osc1, osc2], gain });
   }
 
   function noteOff(midi) {
@@ -418,12 +458,10 @@ function createAudioEngine() {
     voices.delete(midi);
 
     const now = ctx.currentTime;
-    const { osc, gain } = voice;
-    // Short release tail to avoid a click on note-off.
-    gain.gain.cancelScheduledValues(now);
-    gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-    osc.stop(now + 0.14);
+    // Smooth release from the current level (setTargetAtTime needs no read-back).
+    voice.gain.gain.cancelScheduledValues(now);
+    voice.gain.gain.setTargetAtTime(0.0001, now, 0.12);
+    for (const osc of voice.oscillators) osc.stop(now + 0.6);
   }
 
   function setVolume(value) {
