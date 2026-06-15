@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Web Piano</title>
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=12" />
   <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🎹&lt;/text&gt;&lt;/svg&gt;" />
 </head>
 <body>
@@ -50,7 +50,9 @@
       </div>
       <div id="keyGuideStrip" class="key-guide__strip" aria-label="Key sequence to play"></div>
     </div>
-    <div id="piano" class="piano" role="application" aria-label="Piano keyboard"></div>
+    <div class="piano-scroll">
+      <div id="piano" class="piano" role="application" aria-label="Piano keyboard"></div>
+    </div>
     <p class="hint" id="hint">Tap or click the keys — or use your computer keyboard. Press <kbd>?</kbd> for shortcuts.</p>
 
     <div id="nowPlaying" class="now-playing" hidden>
@@ -94,6 +96,6 @@
     <span>Built for the browser · works offline · <a href="https://github.com/brunolm/piano-web" target="_blank" rel="noopener">source</a></span>
   </footer>
 
-  <script src="script.js?v=11"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>

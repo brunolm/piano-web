@@ -37,6 +37,7 @@ const SONGS = [
 ];
 
 const piano = document.getElementById("piano");
+const pianoScroll = piano.closest(".piano-scroll");
 const octaveCountInput = document.getElementById("octaveCount");
 const startOctaveInput = document.getElementById("startOctave");
 const showLabelsInput = document.getElementById("showLabels");
@@ -469,7 +470,20 @@ function autoNoteOn(midi) {
   audio.noteOff(midi); // release any lingering voice so the same pitch retriggers cleanly
   audio.noteOn(midi);
   const el = keyElements.get(midi);
-  if (el) el.classList.add("is-active");
+  if (el) {
+    el.classList.add("is-active");
+    keepKeyVisible(el);
+  }
+}
+
+// During auto-play / show-keys, scroll the keyboard so the active key stays on screen.
+function keepKeyVisible(el) {
+  if (!pianoScroll) return;
+  const left = el.offsetLeft;
+  const right = left + el.offsetWidth;
+  if (left < pianoScroll.scrollLeft || right > pianoScroll.scrollLeft + pianoScroll.clientWidth) {
+    pianoScroll.scrollTo({ left: left - pianoScroll.clientWidth / 2 + el.offsetWidth / 2, behavior: "smooth" });
+  }
 }
 
 function autoNoteOff(midi) {

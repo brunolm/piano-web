@@ -9,6 +9,7 @@
   --label: #5b5b6b;
   --text: #e6e6f0;
   --panel: rgba(255, 255, 255, 0.06);
+  --key-w: 46px; /* minimum white-key width; keyboard scrolls horizontally past this */
 }
 
 * {
@@ -132,16 +133,26 @@ body {
   min-height: 0;
 }
 
+/* Scroll viewport: fills the width and scrolls horizontally when the keys are wider. */
+.piano-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.05);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Keyboard: sized to its keys (so they keep --key-w), but at least full width. */
 .piano {
   display: flex;
   position: relative;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   height: min(46vh, 280px);
-  border-radius: 10px;
   background: #0a0a12;
   padding: 10px 8px 0;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.05);
-  overflow: hidden;
 }
 
 /* ---------- Keys ---------- */
@@ -152,7 +163,7 @@ body {
 }
 
 .key--white {
-  flex: 1 1 0;
+  flex: 1 0 var(--key-w); /* grow to fill on wide screens; never shrink below --key-w */
   background: linear-gradient(180deg, #ffffff, var(--white-key));
   border: 1px solid #b9b9c9;
   border-radius: 0 0 7px 7px;
