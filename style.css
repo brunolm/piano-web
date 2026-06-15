@@ -173,7 +173,7 @@ body {
   min-width: 100%;
   height: min(46vh, 280px);
   background: #0a0a12;
-  padding: 10px 8px 28px; /* bottom room so the big scrollbar doesn't cover key labels */
+  padding: 10px 8px 4px;
 }
 
 /* ---------- Keys ---------- */
@@ -556,9 +556,6 @@ kbd {
     font-size: 1rem;
     flex: none;
   }
-  .version {
-    display: none;
-  }
   .songs-btn {
     flex: none;
     margin-left: 0.3rem;
@@ -596,7 +593,7 @@ kbd {
     flex: none;
   }
   .version {
-    display: none;
+    font-size: 0.6rem;
   }
   .songs-btn {
     flex: none;
