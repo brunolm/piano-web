@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Web Piano</title>
-  <link rel="stylesheet" href="style.css?v=12" />
+  <link rel="stylesheet" href="style.css?v=13" />
   <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🎹&lt;/text&gt;&lt;/svg&gt;" />
 </head>
 <body>
@@ -19,11 +19,11 @@
     <div class="controls">
       <label class="control">
         <span>Octaves</span>
-        <input id="octaveCount" type="range" min="1" max="6" step="1" value="4" />
+        <input id="octaveCount" type="range" min="1" max="6" step="1" value="4" aria-label="Octaves" title="Octaves" />
       </label>
       <label class="control">
         <span>Start</span>
-        <select id="startOctave">
+        <select id="startOctave" aria-label="Start octave" title="Start octave">
           <option value="1">C1</option>
           <option value="2" selected>C2</option>
           <option value="3">C3</option>
@@ -32,12 +32,12 @@
         </select>
       </label>
       <label class="control control--toggle">
-        <input id="showLabels" type="checkbox" checked />
+        <input id="showLabels" type="checkbox" checked aria-label="Show note labels" title="Show note labels" />
         <span>Labels</span>
       </label>
       <label class="control">
         <span>Volume</span>
-        <input id="volume" type="range" min="0" max="100" step="1" value="50" />
+        <input id="volume" type="range" min="0" max="100" step="1" value="50" aria-label="Volume" title="Volume" />
       </label>
     </div>
   </header>
@@ -96,6 +96,6 @@
     <span>Built for the browser · works offline · <a href="https://github.com/brunolm/piano-web" target="_blank" rel="noopener">source</a></span>
   </footer>
 
-  <script src="script.js?v=12"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>
